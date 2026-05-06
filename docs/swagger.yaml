@@ -1,0 +1,156 @@
+basePath: /api/v1
+definitions:
+  handler.APIResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      status:
+        type: integer
+    type: object
+  handler.ProductRequest:
+    properties:
+      name:
+        minLength: 3
+        type: string
+      price:
+        type: integer
+    required:
+    - name
+    - price
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Ini adalah dokumentasi API untuk E-Commerce Kelas Enterprise.
+  title: Toko Arsitek API
+  version: "1.0"
+paths:
+  /products:
+    get:
+      consumes:
+      - application/json
+      description: Mengambil daftar semua produk yang tersedia dalam sistem
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      summary: Dapatkan Semua Produk
+      tags:
+      - Products
+    post:
+      consumes:
+      - application/json
+      description: Menyimpan produk baru ke dalam sistem
+      parameters:
+      - description: Format JSON untuk produk baru
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.ProductRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      summary: Tambah Produk Baru
+      tags:
+      - Products
+  /products/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Menghapus produk berdasarkan ID yang diberikan
+      parameters:
+      - description: ID Produk
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      summary: Hapus Produk
+      tags:
+      - Products
+    get:
+      consumes:
+      - application/json
+      description: Mengambil informasi produk berdasarkan ID yang diberikan
+      parameters:
+      - description: ID Produk
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      summary: Dapatkan Produk berdasarkan ID
+      tags:
+      - Products
+    put:
+      consumes:
+      - application/json
+      description: Memperbarui informasi produk berdasarkan ID yang diberikan
+      parameters:
+      - description: ID Produk
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Format JSON untuk pembaruan produk
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.ProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      summary: Perbarui Produk
+      tags:
+      - Products
+swagger: "2.0"
