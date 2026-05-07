@@ -18,7 +18,7 @@ import (
 type ProductRequest struct {
 	SKU   string          `json:"sku" binding:"required"`
 	Name  string          `json:"name" binding:"required,min=3"`
-	Price decimal.Decimal `json:"price" binding:"required,gt=0"`
+	Price decimal.Decimal `json:"price" binding:"required"`
 	Stock int             `json:"stock" binding:"required,gte=0"`
 }
 
@@ -61,20 +61,25 @@ func NewProductHandler(u *usecase.ProductUsecase) *ProductHandler {
 // ==========================================
 func (h *ProductHandler) CreateProduct(c *gin.Context) {
 	// wadah request
-	var productReq ProductRequest
+	var reqPayload ProductRequest
 
 	// Validasi request
-	if err := c.ShouldBindJSON(&productReq); err != nil {
+	if err := c.ShouldBindJSON(&reqPayload); err != nil {
 		response.JSON(c, http.StatusBadRequest, "Data product tidak valid", nil)
+		return
+	}
+
+	if reqPayload.Price.IsNegative() || reqPayload.Price.IsZero() {
+		response.JSON(c, http.StatusBadRequest, "Harga harus lebih besar dari nol", nil)
 		return
 	}
 
 	// Buat product
 	newProduct := domain.Product{
-		SKU:   productReq.SKU,
-		Name:  productReq.Name,
-		Price: productReq.Price,
-		Stock: productReq.Stock,
+		SKU:   reqPayload.SKU,
+		Name:  reqPayload.Name,
+		Price: reqPayload.Price,
+		Stock: reqPayload.Stock,
 	}
 
 	// Request Context
@@ -161,6 +166,11 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 		return
 	}
 
+	if reqPayload.Price.IsNegative() || reqPayload.Price.IsZero() {
+		response.JSON(c, http.StatusBadRequest, "Harga harus lebih besar dari nol", nil)
+		return
+	}
+
 	reqProduct := domain.Product{
 		SKU:   reqPayload.SKU,
 		Name:  reqPayload.Name,
@@ -205,7 +215,7 @@ func (h *ProductHandler) DeleteProduct(c *gin.Context) {
 			return
 		}
 		response.JSON(c, http.StatusInternalServerError, "Terjadi kesalahan pada server", nil)
-		return 
+		return
 	}
 
 	// Todo: return success response
