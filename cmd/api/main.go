@@ -48,12 +48,17 @@ func main() {
 	defer dbPool.Close()
 	database.RunMigrations(dsn)
 
-
 	productRepo := repository.NewProductRepository(dbPool)
 
 	productUsecase := usecase.NewProductUsecase(productRepo)
 
 	productHandler := handler.NewProductHandler(productUsecase)
+
+	orderRepo := repository.NewOrderRepository(dbPool)
+
+	orderUsecase := usecase.NewOrderUsecase(orderRepo, productRepo)
+
+	orderHandler := handler.NewOrderHandler(orderUsecase)
 
 	// Inisialisasi Gin Router
 	router := gin.Default()
@@ -62,11 +67,20 @@ func main() {
 
 	productGroup := v1.Group("/products")
 	{
-		productGroup.POST("/", productHandler.CreateProduct)
 		productGroup.GET("/", productHandler.GetAllProducts)
-		// productGroup.GET("/:id", productHandler.GetProductByID)
-		// productGroup.PUT("/:id", productHandler.UpdateProduct)
-		// productGroup.DELETE("/:id", productHandler.DeleteProduct)
+		productGroup.GET("/:id", productHandler.GetProductByID)
+	}
+
+	orderGroup := v1.Group("/orders")
+	{
+		orderGroup.POST("/checkout", orderHandler.CheckOut)
+	}
+
+	adminGroup := v1.Group("/admin")
+	{
+		adminGroup.POST("/products", productHandler.CreateProduct)
+		adminGroup.PUT("/products/:id", productHandler.UpdateProduct)
+		adminGroup.DELETE("/products/:id", productHandler.DeleteProduct)
 	}
 
 	// Buat endpoint sederhana(Ping)
