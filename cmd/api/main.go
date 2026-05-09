@@ -3,20 +3,18 @@ package main
 import (
 	"context"
 	_ "ecommerce/docs"
+	"ecommerce/internal/config"
 	"ecommerce/internal/database"
 	"ecommerce/internal/handler"
 	"ecommerce/internal/repository"
 	"ecommerce/internal/usecase"
 	"fmt"
-	"log"
 	"net/http"
-	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -27,30 +25,20 @@ import (
 // @host localhost:8080
 // @BasePath /api/v1
 func main() {
+	cfg := config.LoadConfig()
 
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
-	dsn := os.Getenv("DB_URI")
-	if dsn == "" {
-		fmt.Println("DB_URI env var belum di set")
-		os.Exit(1)
-	}
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-
-	dbPool := database.ConnectDB(dsn)
+	// Koneksi DB
+	dbPool := database.ConnectDB(cfg.DBUri)
 	defer dbPool.Close()
-	database.RunMigrations(dsn)
+	database.RunMigrations(cfg.DBUri)
+
+	// Koneksi Redis
+	redisClient := database.ConnRedis(cfg.RedisURL)
+	defer redisClient.Close()
 
 	productRepo := repository.NewProductRepository(dbPool)
 
-	productUsecase := usecase.NewProductUsecase(productRepo)
+	productUsecase := usecase.NewProductUsecase(productRepo, redisClient)
 
 	productHandler := handler.NewProductHandler(productUsecase)
 
@@ -93,7 +81,7 @@ func main() {
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	srv := &http.Server{
-		Addr:         ":" + port,
+		Addr:         ":" + cfg.AppPort,
 		Handler:      router,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
@@ -101,8 +89,8 @@ func main() {
 	}
 
 	go func() {
-		fmt.Printf("🚀 API Server berjalan di http://localhost:%v\n", port)
-		fmt.Println("📖 Dokumentasi API tersedia di http://localhost:8080/swagger/index.html")
+		fmt.Printf("🚀 API Server berjalan di http://localhost:%v\n", cfg.AppPort)
+		fmt.Println("📖 Dokumentasi API tersedia di http://localhost:" + cfg.AppPort + "/swagger/index.html")
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			fmt.Printf("Error saat menjalankan server %v\n", err)
 		}

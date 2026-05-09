@@ -26,5 +26,13 @@ type ProductRepository interface {
 	DeleteProduct(context.Context, int) error
 }
 
+type ProductUsecase interface {
+	CreateProduct(ctx context.Context, product Product) (Product, error)
+	GetAllProducts(ctx context.Context) ([]Product, error)
+	GetProductByID(ctx context.Context, id int) (Product, error)
+	UpdateProduct(ctx context.Context, id int, payload Product) (Product, error)
+	DeleteProduct(ctx context.Context, id int) error
+}
+
 var ErrSKUDuplicate = errors.New("sku sudah terdaftar, silakan gunakan sku lain")
 var ErrProductNotFound = errors.New("product tidak ditemukan")

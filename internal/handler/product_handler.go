@@ -2,7 +2,6 @@ package handler
 
 import (
 	"ecommerce/internal/domain"
-	"ecommerce/internal/usecase"
 	"ecommerce/pkg/response"
 	"errors"
 	"net/http"
@@ -45,14 +44,13 @@ func ToProductResponse(p domain.Product) ProductResponse {
 }
 
 type ProductHandler struct {
-	// Menyimpan referensi ke usecase yang akan digunakan untuk operasi bisnis
-	usecase *usecase.ProductUsecase
+	usecase domain.ProductUsecase
 }
 
 // Konstruktor untuk membuat instance baru dari ProductHandler
-func NewProductHandler(u *usecase.ProductUsecase) *ProductHandler {
+func NewProductHandler(ph domain.ProductUsecase) *ProductHandler {
 	return &ProductHandler{
-		usecase: u,
+		usecase: ph,
 	}
 }
 

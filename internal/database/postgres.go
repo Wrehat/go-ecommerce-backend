@@ -23,7 +23,7 @@ func ConnectDB(dsn string) *pgxpool.Pool {
 	config.MaxConnLifetime = 30 * time.Minute
 	config.MaxConnIdleTime = 5 * time.Minute
 
-	pool, err := pgxpool.New(context.Background(), dsn)
+	pool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
 		log.Fatalf("❌ Gagal membuat koneksi ke database: %v\n", err)
 	}
