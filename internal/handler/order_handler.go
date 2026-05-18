@@ -34,6 +34,16 @@ func NewOrderHandler(oh domain.OrderUsecase) *orderHandler {
 	return &orderHandler{usecase: oh}
 }
 
+// CheckOut godoc
+// @Summary Checkout Pesanan
+// @Description Melakukan proses checkout belanjaan (Butuh Login)
+// @Tags Orders
+// @Accept json
+// @Produce json
+// @Param request body CheckOutReq true "Format JSON Checkout"
+// @Success 200 {object} response.APIResponse
+// @Security BearerAuth
+// @Router /orders/checkout [post]
 func (h *orderHandler) CheckOut(c *gin.Context) {
 	// Todo: Bind JSON
 	var req CheckOutReq

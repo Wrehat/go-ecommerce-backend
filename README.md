@@ -3,6 +3,7 @@
 Proyek ini adalah implementasi Backend menggunakan bahasa Go dengan standar **Clean Architecture** dan **Production-Ready Engineering**.
 
 ## 🚀 Tech Stack
+
 - **Language:** Go (Golang)
 - **Framework:** Gin Gonic
 - **Database:** PostgreSQL (pgx/v5 with Connection Pooling)
@@ -13,13 +14,16 @@ Proyek ini adalah implementasi Backend menggunakan bahasa Go dengan standar **Cl
 - **Unique ID:** Google UUID
 
 ## 🛠️ Arsitektur
+
 Mengikuti prinsip Clean Architecture:
+
 - `internal/domain`: Kontrak interface dan entitas pusat.
 - `internal/repository`: Implementasi SQL murni & akses database.
 - `internal/usecase`: Logika bisnis utama & Caching Strategy.
 - `internal/handler`: Layer API, input validation (Gin), & Response Standard.
 
 ## ✨ Fitur Utama (Implemented)
+
 - **ACID Transactions:** Menjamin integritas data saat checkout.
 - **High Performance Caching:** Implementasi Cache-Aside Pattern dengan Redis untuk katalog produk.
 - **Environment Management:** Konfigurasi fleksibel menggunakan Viper (.env & OS variables).
@@ -27,15 +31,18 @@ Mengikuti prinsip Clean Architecture:
 - **Graceful Shutdown:** Memastikan server mati dengan aman tanpa memutus transaksi.
 
 ## 📈 Progres (Bulan 2 - Minggu 8)
+
 - [x] Setup Environment & Database Connection Pooling
 - [x] Database Migration System
 - [x] Product Module (CRUD with Soft Delete)
 - [x] Order Module (ACID Transactions - Checkout Logic)
 - [x] Modular Refactoring & Viper Configuration
 - [x] Caching Strategy (Redis Implementation)
-- [ ] Authentication & Security (JWT, Bcrypt) - *Next Task*
+- [x] Authentication & Security (JWT, Bcrypt, & Simple RBAC)
+- [ ] Infrastructure Middleware (Request ID, Logging, Rate Limiting) - _Next Task_
 
 ## ⚙️ Cara Menjalankan
+
 1. Clone repository.
 2. Setup file `.env` (DB_URI, REDIS_URL, PORT).
 3. Jalankan Redis & Postgres via Docker.

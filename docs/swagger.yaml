@@ -1,12 +1,39 @@
 basePath: /api/v1
 definitions:
-  handler.APIResponse:
+  handler.CheckOutItemReq:
     properties:
-      data: {}
-      message:
-        type: string
-      status:
+      product_id:
         type: integer
+      quantity:
+        minimum: 1
+        type: integer
+    required:
+    - product_id
+    - quantity
+    type: object
+  handler.CheckOutReq:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/handler.CheckOutItemReq'
+        minItems: 1
+        type: array
+      user_id:
+        type: integer
+    required:
+    - items
+    - user_id
+    type: object
+  handler.LoginReq:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
     type: object
   handler.ProductRequest:
     properties:
@@ -14,39 +41,54 @@ definitions:
         minLength: 3
         type: string
       price:
+        type: number
+      sku:
+        type: string
+      stock:
+        minimum: 0
         type: integer
     required:
     - name
     - price
+    - sku
+    - stock
+    type: object
+  handler.RegisterReq:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  response.APIResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      status:
+        type: integer
     type: object
 host: localhost:8080
 info:
   contact: {}
-  description: Ini adalah dokumentasi API untuk E-Commerce Kelas Enterprise.
+  description: Ini adalah dokumentasi API untuk E-Commerce.
   title: Toko Arsitek API
   version: "1.0"
 paths:
-  /products:
-    get:
-      consumes:
-      - application/json
-      description: Mengambil daftar semua produk yang tersedia dalam sistem
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.APIResponse'
-      summary: Dapatkan Semua Produk
-      tags:
-      - Products
+  /admin/products:
     post:
       consumes:
       - application/json
-      description: Menyimpan produk baru ke dalam sistem
+      description: Menyimpan produk baru (Hanya Admin)
       parameters:
-      - description: Format JSON untuk produk baru
+      - description: Format JSON Produk
         in: body
         name: request
         required: true
@@ -58,99 +100,112 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/handler.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/handler.APIResponse'
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
       summary: Tambah Produk Baru
       tags:
-      - Products
-  /products/{id}:
-    delete:
+      - Admin
+  /orders/checkout:
+    post:
       consumes:
       - application/json
-      description: Menghapus produk berdasarkan ID yang diberikan
+      description: Melakukan proses checkout belanjaan (Butuh Login)
       parameters:
-      - description: ID Produk
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/handler.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/handler.APIResponse'
-      summary: Hapus Produk
-      tags:
-      - Products
-    get:
-      consumes:
-      - application/json
-      description: Mengambil informasi produk berdasarkan ID yang diberikan
-      parameters:
-      - description: ID Produk
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/handler.APIResponse'
-      summary: Dapatkan Produk berdasarkan ID
-      tags:
-      - Products
-    put:
-      consumes:
-      - application/json
-      description: Memperbarui informasi produk berdasarkan ID yang diberikan
-      parameters:
-      - description: ID Produk
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Format JSON untuk pembaruan produk
+      - description: Format JSON Checkout
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.ProductRequest'
+          $ref: '#/definitions/handler.CheckOutReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.APIResponse'
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Checkout Pesanan
+      tags:
+      - Orders
+  /products:
+    get:
+      description: Mengambil daftar semua produk yang tersedia
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Dapatkan Semua Produk
+      tags:
+      - Products
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: Melakukan autentikasi dan mendapatkan Token JWT
+      parameters:
+      - description: Format JSON untuk login
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.LoginReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handler.APIResponse'
-        "404":
-          description: Not Found
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.APIResponse'
-      summary: Perbarui Produk
+            $ref: '#/definitions/response.APIResponse'
+      summary: Login User
       tags:
-      - Products
+      - Auth
+  /users/register:
+    post:
+      consumes:
+      - application/json
+      description: Mendaftarkan akun pelanggan baru ke sistem
+      parameters:
+      - description: Format JSON untuk register
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.RegisterReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Register User Baru
+      tags:
+      - Auth
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

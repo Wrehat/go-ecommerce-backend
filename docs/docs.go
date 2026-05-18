@@ -15,30 +15,14 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/products": {
-            "get": {
-                "description": "Mengambil daftar semua produk yang tersedia dalam sistem",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Products"
-                ],
-                "summary": "Dapatkan Semua Produk",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/handler.APIResponse"
-                        }
-                    }
-                }
-            },
+        "/admin/products": {
             "post": {
-                "description": "Menyimpan produk baru ke dalam sistem",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menyimpan produk baru (Hanya Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -46,12 +30,12 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Products"
+                    "Admin"
                 ],
                 "summary": "Tambah Produk Baru",
                 "parameters": [
                     {
-                        "description": "Format JSON untuk produk baru",
+                        "description": "Format JSON Produk",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -64,21 +48,20 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/handler.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/handler.APIResponse"
+                            "$ref": "#/definitions/response.APIResponse"
                         }
                     }
                 }
             }
         },
-        "/products/{id}": {
-            "get": {
-                "description": "Mengambil informasi produk berdasarkan ID yang diberikan",
+        "/orders/checkout": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Melakukan proses checkout belanjaan (Butuh Login)",
                 "consumes": [
                     "application/json"
                 ],
@@ -86,60 +69,17 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Products"
+                    "Orders"
                 ],
-                "summary": "Dapatkan Produk berdasarkan ID",
+                "summary": "Checkout Pesanan",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "ID Produk",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/handler.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/handler.APIResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Memperbarui informasi produk berdasarkan ID yang diberikan",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Products"
-                ],
-                "summary": "Perbarui Produk",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID Produk",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Format JSON untuk pembaruan produk",
+                        "description": "Format JSON Checkout",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.ProductRequest"
+                            "$ref": "#/definitions/handler.CheckOutReq"
                         }
                     }
                 ],
@@ -147,25 +87,35 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/handler.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/handler.APIResponse"
+                            "$ref": "#/definitions/response.APIResponse"
                         }
                     }
                 }
-            },
-            "delete": {
-                "description": "Menghapus produk berdasarkan ID yang diberikan",
+            }
+        },
+        "/products": {
+            "get": {
+                "description": "Mengambil daftar semua produk yang tersedia",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Dapatkan Semua Produk",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/login": {
+            "post": {
+                "description": "Melakukan autentikasi dan mendapatkan Token JWT",
                 "consumes": [
                     "application/json"
                 ],
@@ -173,35 +123,83 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Products"
+                    "Auth"
                 ],
-                "summary": "Hapus Produk",
+                "summary": "Login User",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "ID Produk",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
+                        "description": "Format JSON untuk login",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.LoginReq"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.APIResponse"
+                            "$ref": "#/definitions/response.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/handler.APIResponse"
+                            "$ref": "#/definitions/response.APIResponse"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.APIResponse"
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/register": {
+            "post": {
+                "description": "Mendaftarkan akun pelanggan baru ke sistem",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Register User Baru",
+                "parameters": [
+                    {
+                        "description": "Format JSON untuk register",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.RegisterReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
                         }
                     }
                 }
@@ -209,7 +207,103 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "handler.APIResponse": {
+        "handler.CheckOutItemReq": {
+            "type": "object",
+            "required": [
+                "product_id",
+                "quantity"
+            ],
+            "properties": {
+                "product_id": {
+                    "type": "integer"
+                },
+                "quantity": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "handler.CheckOutReq": {
+            "type": "object",
+            "required": [
+                "items",
+                "user_id"
+            ],
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/handler.CheckOutItemReq"
+                    }
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handler.LoginReq": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6
+                }
+            }
+        },
+        "handler.ProductRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "price",
+                "sku",
+                "stock"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "minLength": 3
+                },
+                "price": {
+                    "type": "number"
+                },
+                "sku": {
+                    "type": "string"
+                },
+                "stock": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
+        "handler.RegisterReq": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6
+                }
+            }
+        },
+        "response.APIResponse": {
             "type": "object",
             "properties": {
                 "data": {},
@@ -220,22 +314,13 @@ const docTemplate = `{
                     "type": "integer"
                 }
             }
-        },
-        "handler.ProductRequest": {
-            "type": "object",
-            "required": [
-                "name",
-                "price"
-            ],
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "minLength": 3
-                },
-                "price": {
-                    "type": "integer"
-                }
-            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`
@@ -247,7 +332,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "Toko Arsitek API",
-	Description:      "Ini adalah dokumentasi API untuk E-Commerce Kelas Enterprise.",
+	Description:      "Ini adalah dokumentasi API untuk E-Commerce.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

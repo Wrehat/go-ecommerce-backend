@@ -57,6 +57,17 @@ func NewProductHandler(ph domain.ProductUsecase) *ProductHandler {
 // ==========================================
 // FUNGSI-FUNGSI ENDPOINT
 // ==========================================
+
+// CreateProduct godoc
+// @Summary Tambah Produk Baru
+// @Description Menyimpan produk baru (Hanya Admin)
+// @Tags Admin
+// @Accept json
+// @Produce json
+// @Param request body ProductRequest true "Format JSON Produk"
+// @Success 201 {object} response.APIResponse
+// @Security BearerAuth
+// @Router /admin/products [post]
 func (h *ProductHandler) CreateProduct(c *gin.Context) {
 	// wadah request
 	var reqPayload ProductRequest
@@ -98,6 +109,13 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 	response.JSON(c, http.StatusCreated, "Product berhasil dibuat", ToProductResponse(product))
 }
 
+// GetAllProducts godoc
+// @Summary Dapatkan Semua Produk
+// @Description Mengambil daftar semua produk yang tersedia
+// @Tags Products
+// @Produce json
+// @Success 200 {object} response.APIResponse
+// @Router /products [get]
 func (h *ProductHandler) GetAllProducts(c *gin.Context) {
 	// Request Context
 	ctx := c.Request.Context()

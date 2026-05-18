@@ -7,9 +7,10 @@ import (
 )
 
 type AppConfig struct {
-	AppPort  string `mapstructure:"PORT"`
-	DBUri    string `mapstructure:"DB_URI"`
-	RedisURL string `mapstructure:"REDIS_URL"`
+	AppPort   string `mapstructure:"PORT"`
+	DBUri     string `mapstructure:"DB_URI"`
+	RedisURL  string `mapstructure:"REDIS_URL"`
+	JWTSecret string `mapstructure:"JWT_SECRET"`
 }
 
 func LoadConfig() *AppConfig {
