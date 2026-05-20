@@ -61,15 +61,20 @@ func main() {
 	// =============================================================
 	// 3. ROUTER & API MAPPING (Pemetaan Rute HTTP)
 	// =============================================================
-	router := gin.Default()
+	// r := gin.Default()
+	r := gin.New()
+	r.Use(gin.Recovery())
+	r.Use(middleware.RequestID())
+	r.Use(middleware.Logger())
+	r.Use(middleware.RateLimiter(5, 10))
 	authMiddleware := middleware.RequireAuth(cfg.JWTSecret)
 	setupRoutes := func() {
-		v1 := router.Group("/api/v1")
+		v1 := r.Group("/api/v1")
 
 		// Public Product Routes
 		productGroup := v1.Group("/products")
 		{
-			productGroup.GET("/", productHandler.GetAllProducts)
+			productGroup.GET("", productHandler.GetAllProducts)
 			productGroup.GET("/:id", productHandler.GetProductByID)
 		}
 
@@ -95,12 +100,12 @@ func main() {
 		}
 
 		// Base Utility Routes
-		router.GET("/ping", func(c *gin.Context) {
+		r.GET("/ping", func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{
 				"message": "PONG! Server Gin berjalan dengan sempurna!",
 			})
 		})
-		router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	}
 
 	// Jalankan pemetaan rute
@@ -111,7 +116,7 @@ func main() {
 	// =============================================================
 	srv := &http.Server{
 		Addr:         ":" + cfg.AppPort,
-		Handler:      router,
+		Handler:      r,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  15 * time.Second,
