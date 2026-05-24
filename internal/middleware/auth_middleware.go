@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"ecommerce/pkg/jwtutil"
 	"ecommerce/pkg/response"
 	"fmt"
 	"net/http"
@@ -27,17 +28,19 @@ func RequireAuth(jwtsecret string) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-
 		// Todo : cek keaslian token
 		tokenString := parts[1]
-		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
-			// Todo : cek signing method
-			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("algoritma token tidak valid")
-			}
+		var claims jwtutil.MyCustomClaims
 
-			return []byte(jwtsecret), nil
-		})
+		token, err := jwt.ParseWithClaims(tokenString, &claims,
+			func(t *jwt.Token) (any, error) {
+				// Todo : cek signing method
+				if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, fmt.Errorf("algoritma token tidak valid")
+				}
+				return []byte(jwtsecret), nil
+			},
+		)
 
 		// Todo : handle error
 		// Jika stempel palsu, rusak, atau token expired
@@ -48,15 +51,9 @@ func RequireAuth(jwtsecret string) gin.HandlerFunc {
 		}
 
 		// Todo : ekstrak token
-		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			c.Set("user_id", claims["user_id"])
-			c.Set("email", claims["email"])
-			c.Set("role", claims["role"])
-		} else {
-			response.JSON(c, http.StatusUnauthorized, "Gagal membaca token", nil)
-			c.Abort()
-			return
-		}
+		c.Set("user_id", claims.UserID)
+		c.Set("email", claims.Email)
+		c.Set("role", claims.Role)
 
 		c.Next()
 	}
@@ -64,10 +61,16 @@ func RequireAuth(jwtsecret string) gin.HandlerFunc {
 
 func RequireRole(allowedRoles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Todo : ambil role
-		userRole, exist := c.Get("role")
+		userRoleAny, exist := c.Get("role")
 		if !exist {
 			response.JSON(c, http.StatusForbidden, "Akses ditolak. Role tidak dikenali", nil)
+			c.Abort()
+			return
+		}
+		userRole, ok := userRoleAny.(string)
+
+		if !ok {
+			response.JSON(c, http.StatusInternalServerError, "Tipe data role tidak valid", nil)
 			c.Abort()
 			return
 		}

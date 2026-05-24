@@ -66,7 +66,7 @@ func main() {
 	r.Use(gin.Recovery())
 	r.Use(middleware.RequestID())
 	r.Use(middleware.Logger())
-	r.Use(middleware.RateLimiter(5, 10))
+	r.Use(middleware.RateLimiterTokenBucket(redisClient, 1, 10))
 	authMiddleware := middleware.RequireAuth(cfg.JWTSecret)
 	setupRoutes := func() {
 		v1 := r.Group("/api/v1")

@@ -26,6 +26,8 @@ type UserUsecase interface {
 	Login(ctx context.Context, email, password string) (string, error)
 }
 
-var ErrEmailDuplicate = errors.New("Email sudah terdaftar. Silakan gunakan email lain.")
-var ErrUserNotFound = errors.New("Pengguna tidak ditemukan.")
-var ErrInvalidCredentials = errors.New("email atau password anda salah.")
+var (
+	ErrEmailDuplicate     = errors.New("Email sudah terdaftar. Silahkan gunakan email lain")
+	ErrUserNotFound       = errors.New("Pengguna tidak ditemukan.")
+	ErrInvalidCredentials = errors.New("Email atau password anda salah.")
+)

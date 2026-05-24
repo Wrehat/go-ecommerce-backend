@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"ecommerce/internal/domain"
+	"ecommerce/pkg/jwtutil"
 	"errors"
 	"time"
 
@@ -23,36 +24,30 @@ func NewUserUsecase(repo domain.UserRepository, secretKey string) domain.UserUse
 }
 
 func (u *userUsecase) Register(ctx context.Context, user domain.User) (domain.User, error) {
-	// Todo : buat hashed password
+	// Todo : buat hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.PasswordHash), bcrypt.DefaultCost)
 
-	// Todo : error handling
 	if err != nil {
 		return domain.User{}, err
 	}
 
-	// Todo : timpa password dengan hashed password
 	user.PasswordHash = string(hashedPassword)
 
-	// Todo : panggil layer repo & create
+	// Todo : panggil repo dan buat data
 	createdUser, err := u.repo.CreateUser(ctx, user)
+
 	if err != nil {
 		return domain.User{}, err
 	}
 
-	// Todo : cegah hashedpassword bocor diluar layer usecase
 	createdUser.PasswordHash = ""
 
-	// Todo : return response
 	return createdUser, nil
 }
 
-func (u *userUsecase) Login(ctx context.Context, email string, password string) (string, error) {
-
-	// Todo : cek apakah email ada pada DB
+func (u *userUsecase) Login(ctx context.Context, email, password string) (string, error) {
+	// Todo : cari email di database
 	user, err := u.repo.GetUserByEmail(ctx, email)
-
-	// Todo : handling error
 	if err != nil {
 		if errors.Is(err, domain.ErrUserNotFound) {
 			return "", domain.ErrInvalidCredentials
@@ -60,12 +55,23 @@ func (u *userUsecase) Login(ctx context.Context, email string, password string) 
 		return "", err
 	}
 
-	// Todo : validasi kecocokan password
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
+	// Todo : cek password
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+
+	if err != nil {
 		return "", domain.ErrInvalidCredentials
 	}
 
 	// Todo : generate token
+	claims := jwtutil.MyCustomClaims{
+		UserID: user.ID,
+		Email:  user.Email,
+		Role:   user.Role,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": user.ID,
 		"email":   user.Email,
@@ -73,11 +79,10 @@ func (u *userUsecase) Login(ctx context.Context, email string, password string) 
 		"exp":     time.Now().Add(24 * time.Hour).Unix(),
 	})
 
-	// Todo : signing token
-	tokenString, err := token.SignedString(u.jwtSecretKey)
+	signedToken, err := token.SignedString(u.jwtSecretKey)
 	if err != nil {
 		return "", err
 	}
 
-	return tokenString, nil
+	return signedToken, nil
 }
