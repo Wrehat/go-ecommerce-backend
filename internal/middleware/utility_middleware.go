@@ -1,14 +1,15 @@
 package middleware
 
 import (
+	"ecommerce/pkg/logger"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 )
 
 // Todo : middleware untuk request id
@@ -35,7 +36,15 @@ func Logger() gin.HandlerFunc {
 		latency := time.Since(start)
 		reqID, _ := c.Get("request_id")
 
-		log.Printf("[API] %s | %d | %s %s | %v", reqID, c.Writer.Status(), c.Request.Method, c.Request.URL.Path, latency)
+		// log.Printf("[API] %s | %d | %s %s | %v", reqID, c.Writer.Status(), c.Request.Method, c.Request.URL.Path, latency)
+		logger.Log.Info("Incoming Request",
+			zap.Any("request_id", reqID),
+			zap.Int("status", c.Writer.Status()),
+			zap.String("method", c.Request.Method),
+			zap.String("path", c.Request.URL.Path),
+			zap.Duration("latency", latency),
+			zap.String("ip", c.ClientIP()),
+		)
 	}
 }
 
@@ -94,7 +103,8 @@ func RateLimiterTokenBucket(redisClient *redis.Client, ratePerSec float64, capac
 		result, err := script.Run(ctx, redisClient, []string{tokensKey, timestampKey}, ratePerSec, capacity, now).Result()
 
 		if err != nil {
-			log.Printf("⚠️ Redis error saat rate limiting: %v", err)
+			// log.Printf("⚠️ Redis error saat rate limiting: %v", err)
+			logger.Log.Warn("Redis error saat rate limiting", zap.Error(err))
 			c.Next()
 			return
 		}

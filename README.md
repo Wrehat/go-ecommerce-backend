@@ -50,7 +50,8 @@ Mengikuti prinsip Clean Architecture:
 - [x] Self-Review Final Project API E-Commerce
 - [x] Unit Testing & Table-Driven Tests (Day 57-58)
 - [x] Integration Testing dengan testcontainers-go (Day 59-60)
-- [ ] Structured Logging (Zap) + OTel Instrumentation (Day 61) - _Next Task_
+- [x] Structured Logging dengan Uber Zap (Day 61)
+- [ ] OpenTelemetry (OTel) Minimal Instrumentation (Day 61) - _Next Task_
 - [ ] Profiling Performa (pprof) (Day 62) - _Upcoming_
 
 ## ⚙️ Cara Menjalankan

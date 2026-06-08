@@ -9,7 +9,7 @@ import (
 	"ecommerce/internal/middleware"
 	"ecommerce/internal/repository"
 	"ecommerce/internal/usecase"
-	"fmt"
+	"ecommerce/pkg/logger"
 	"net/http"
 	"os/signal"
 	"syscall"
@@ -18,6 +18,7 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"go.uber.org/zap"
 )
 
 // @title Toko Arsitek API
@@ -33,8 +34,14 @@ func main() {
 	// 1. INFRASTRUCTURE & CONFIG INITIALIZATION (Koneksi & Env)
 	// =============================================================
 	cfg := config.LoadConfig()
+
+	logger.InitLogger(cfg.AppEnv)
+	defer logger.Sync()
+	logger.Log.Info("Sistem E-Commerce mulai dijalankan...", zap.String("env", cfg.AppEnv))
+
 	dbPool := database.ConnectDB(cfg.DBUri)
 	defer dbPool.Close()
+
 	database.RunMigrations(cfg.DBUri)
 	redisClient := database.ConnRedis(cfg.RedisURL)
 	defer redisClient.Close()
@@ -124,10 +131,13 @@ func main() {
 
 	// Jalankan server di background goroutine agar tidak memblokir shutdown listener
 	go func() {
-		fmt.Printf("🚀 API Server berjalan di http://localhost:%v\n", cfg.AppPort)
-		fmt.Println("📖 Dokumentasi API tersedia di http://localhost:" + cfg.AppPort + "/swagger/index.html")
+		logger.Log.Info(
+			"Api Server berjalan",
+			zap.String("port", cfg.AppPort),
+			zap.String("docs", "http://localhost:"+cfg.AppPort+"/swagger/index.html"),
+		)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			fmt.Printf("❌ Error saat menjalankan server: %v\n", err)
+			logger.Log.Error("Error saat menjalankan server", zap.Error(err))
 		}
 	}()
 
@@ -147,14 +157,17 @@ func handleGracefulShutdown(srv *http.Server) {
 	// Menunggu tombol Ctrl+C atau perintah kill di terminal
 	<-ctx.Done()
 
-	fmt.Println("\n⏳ Sinyal mati diterima. Mematikan server secara anggun (Graceful Shutdown)...")
+	// fmt.Println("\n⏳ Sinyal mati diterima. Mematikan server secara anggun (Graceful Shutdown)...")
+	logger.Log.Info("Sinyal mati diterima. Mematikan server secara anggun (Graceful Shutdown)...")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
-		fmt.Printf("❌ Error saat mematikan server: %v\n", err)
+		// fmt.Printf("❌ Error saat mematikan server: %v\n", err)
+		logger.Log.Error("Error saat mematikan server", zap.Error(err))
 	}
 
-	fmt.Println("🛑 Server berhasil dimatikan dengan aman sepenuhnya.")
+	// fmt.Println("🛑 Server berhasil dimatikan dengan aman sepenuhnya.")
+	logger.Log.Info("Server berhasil dimatikan dengan aman sepenuhnya.")
 }

@@ -7,6 +7,7 @@ import (
 )
 
 type AppConfig struct {
+	AppEnv    string `mapstructure:"APP_ENV"`
 	AppPort   string `mapstructure:"PORT"`
 	DBUri     string `mapstructure:"DB_URI"`
 	RedisURL  string `mapstructure:"REDIS_URL"`
@@ -34,6 +35,10 @@ func LoadConfig() *AppConfig {
 	// Todo: beri nilai default jika .env tidak ada
 	if config.AppPort == "" {
 		config.AppPort = "8080"
+	}
+
+	if config.AppEnv == "" {
+		config.AppEnv = "development"
 	}
 
 	return &config
