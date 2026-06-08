@@ -11,8 +11,10 @@ Proyek ini adalah implementasi Backend menggunakan bahasa Go dengan standar **Cl
 - **Configuration:** Viper (Environment Management)
 - **Security:** JWT (JSON Web Tokens) & golang.org/x/crypto/bcrypt
 - **Observability & Resilience:** golang.org/x/time/rate (Rate Limiting), Google UUID
+- **Testing:** testify (Assertions), testcontainers-go (Docker-based Integration Testing)
 - **Migration:** golang-migrate
 - **Currency Handling:** shopspring/decimal
+- **API Documentation:** Swagger (swaggo/swag)
 
 ## 🛠️ Arsitektur
 
@@ -31,10 +33,11 @@ Mengikuti prinsip Clean Architecture:
 - **Environment Management:** Konfigurasi fleksibel menggunakan Viper (.env & OS variables).
 - **Clean Dependency Injection:** Kode modular dengan pemisahan interface yang ketat.
 - **Security Layer:** Autentikasi berbasis JWT statless dan otorisasi dengan Role-Based Access Control (RBAC).
-- **Infrastructure Protection:** Proteksi server dengan per-IP Rate Limiting, penyebaran Request ID (UUID) untuk *tracing*, dan *Structured Logging*.
+- **Infrastructure Protection:** Proteksi server dengan per-IP Rate Limiting, penyebaran Request ID (UUID) untuk _tracing_, dan _Structured Logging_.
 - **Graceful Shutdown:** Memastikan server mati dengan aman tanpa memutus transaksi.
+- **Automated Testing:** Pengujian logika murni (Table-Driven Tests) dan Integration Testing database tersolasi secara _on-the-fly_ menggunakan Docker & Testcontainers.
 
-## 📈 Progres (Bulan 2 - Minggu 8)
+## 📈 Progres (Bulan 3 - Minggu 9)
 
 - [x] Setup Environment & Database Connection Pooling
 - [x] Database Migration System
@@ -44,14 +47,29 @@ Mengikuti prinsip Clean Architecture:
 - [x] Caching Strategy (Redis Implementation)
 - [x] Authentication & Security (JWT, Bcrypt, & Simple RBAC)
 - [x] Infrastructure Middleware (Request ID, Logging, Rate Limiting)
-- [ ] Self-Review Final Project API E-Commerce (Day 56) - _Next Task_
-- [ ] Unit Testing & Table-Driven Tests (Bulan 3) - _Upcoming_
+- [x] Self-Review Final Project API E-Commerce
+- [x] Unit Testing & Table-Driven Tests (Day 57-58)
+- [x] Integration Testing dengan testcontainers-go (Day 59-60)
+- [ ] Structured Logging (Zap) + OTel Instrumentation (Day 61) - _Next Task_
+- [ ] Profiling Performa (pprof) (Day 62) - _Upcoming_
 
 ## ⚙️ Cara Menjalankan
 
+### Menjalankan Server API
+
 1. Clone repository.
 2. Setup file `.env` (DB_URI, REDIS_URL, PORT, JWT_SECRET).
-3. Jalankan Redis & Postgres via Docker.
-4. Jalankan migrasi & server: `go run cmd/api/main.go`.
-5. Server berjalan di `localhost:8080`.
-6. Akses Swagger UI: http://localhost:8080/swagger/index.html
+3. Pastikan mesin Docker Desktop menyala.
+4. Jalankan Redis & Postgres via Docker.
+5. Jalankan migrasi & server: `go run cmd/api/main.go`.
+6. Server berjalan di `localhost:8080`.
+7. Akses Swagger UI: http://localhost:8080/swagger/index.html
+
+### Menjalankan Testing
+
+Proyek ini menggunakan `testcontainers-go` untuk _Integration Test_. Pastikan **Docker Desktop** dalam kondisi menyala di laptop Anda sebelum menjalankan perintah ini.
+
+```bash
+# Menjalankan seluruh test dengan detail log
+go test -v ./...
+```

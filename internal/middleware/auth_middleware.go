@@ -67,6 +67,7 @@ func RequireRole(allowedRoles ...string) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		
 		userRole, ok := userRoleAny.(string)
 
 		if !ok {
