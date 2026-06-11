@@ -1,0 +1,8 @@
+with-expecter: true
+packages:
+  ecommerce/internal/domain:
+    interfaces:
+      ProductRepository:
+        config:
+          outpkg: mocks
+          dir: internal/usecase/mocks
