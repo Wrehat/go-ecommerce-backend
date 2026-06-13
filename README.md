@@ -10,7 +10,9 @@ Proyek ini adalah implementasi Backend menggunakan bahasa Go dengan standar **Cl
 - **Caching:** Redis (go-redis/v9)
 - **Configuration:** Viper (Environment Management)
 - **Security:** JWT (JSON Web Tokens) & golang.org/x/crypto/bcrypt
-- **Observability & Resilience:** golang.org/x/time/rate (Rate Limiting), Google UUID
+- **Observability & Resilience:** - Uber Zap (Structured Logging)
+  - OpenTelemetry (Distributed Tracing)
+  - golang.org/x/time/rate (Rate Limiting)
 - **Testing:** testify (Assertions), testcontainers-go (Docker-based Integration Testing)
 - **Migration:** golang-migrate
 - **Currency Handling:** shopspring/decimal
@@ -24,7 +26,7 @@ Mengikuti prinsip Clean Architecture:
 - `internal/repository`: Implementasi SQL murni & akses database.
 - `internal/usecase`: Logika bisnis utama & Caching Strategy.
 - `internal/handler`: Layer API, input validation (Gin), & Response Standard.
-- `internal/middleware`: Lapisan pertahanan (Auth, RBAC, Rate Limiting, Logger).
+- `internal/middleware`: Lapisan pertahanan (Auth, RBAC, Rate Limiting, Logger, OTel).
 
 ## ✨ Fitur Utama (Implemented)
 
@@ -34,6 +36,7 @@ Mengikuti prinsip Clean Architecture:
 - **Clean Dependency Injection:** Kode modular dengan pemisahan interface yang ketat.
 - **Security Layer:** Autentikasi berbasis JWT statless dan otorisasi dengan Role-Based Access Control (RBAC).
 - **Infrastructure Protection:** Proteksi server dengan per-IP Rate Limiting, penyebaran Request ID (UUID) untuk _tracing_, dan _Structured Logging_.
+- **Distributed Tracing:** Terintegrasi dengan OpenTelemetry (OTel) untuk pemantauan latensi API secara presisi.
 - **Graceful Shutdown:** Memastikan server mati dengan aman tanpa memutus transaksi.
 - **Automated Testing:** Pengujian logika murni (Table-Driven Tests) dan Integration Testing database tersolasi secara _on-the-fly_ menggunakan Docker & Testcontainers.
 
@@ -51,26 +54,23 @@ Mengikuti prinsip Clean Architecture:
 - [x] Unit Testing & Table-Driven Tests (Day 57-58)
 - [x] Integration Testing dengan testcontainers-go (Day 59-60)
 - [x] Structured Logging dengan Uber Zap (Day 61)
-- [ ] OpenTelemetry (OTel) Minimal Instrumentation (Day 61) - _Next Task_
-- [ ] Profiling Performa (pprof) (Day 62) - _Upcoming_
+- [x] OpenTelemetry (OTel) Minimal Instrumentation (Day 61)
+- [ ] Profiling Performa (pprof) (Day 62) - _Upcoming Task_
 
 ## ⚙️ Cara Menjalankan
 
-### Menjalankan Server API
+### 1. Menyiapkan Proyek
 
 1. Clone repository.
 2. Setup file `.env` (DB_URI, REDIS_URL, PORT, JWT_SECRET).
-3. Pastikan mesin Docker Desktop menyala.
-4. Jalankan Redis & Postgres via Docker.
-5. Jalankan migrasi & server: `go run cmd/api/main.go`.
-6. Server berjalan di `localhost:8080`.
-7. Akses Swagger UI: http://localhost:8080/swagger/index.html
+3. Pastikan mesin **Docker Desktop** dalam keadaan menyala.
 
-### Menjalankan Testing
+### 2. Menjalankan Server API (Development Mode)
 
-Proyek ini menggunakan `testcontainers-go` untuk _Integration Test_. Pastikan **Docker Desktop** dalam kondisi menyala di laptop Anda sebelum menjalankan perintah ini.
+Proyek ini menggunakan `Makefile` untuk mempermudah eksekusi infrastruktur dan aplikasi secara bersamaan.
+
+Buka terminal dan jalankan perintah sakti ini:
 
 ```bash
-# Menjalankan seluruh test dengan detail log
-go test -v ./...
+make run
 ```

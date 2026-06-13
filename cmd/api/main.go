@@ -19,6 +19,10 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
+
+	"ecommerce/pkg/telemetry"
+
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 )
 
 // @title Toko Arsitek API
@@ -38,6 +42,17 @@ func main() {
 	logger.InitLogger(cfg.AppEnv)
 	defer logger.Sync()
 	logger.Log.Info("Sistem E-Commerce mulai dijalankan...", zap.String("env", cfg.AppEnv))
+
+	tp, err := telemetry.InitTracer("ecommerce-api")
+	if err != nil {
+		logger.Log.Error("Gagal inisialisasi OTel Tracer", zap.Error(err))
+		panic("Gagal menyalakan OpenTelemetry")
+	}
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			logger.Log.Error("Gagal mematikan Tracer", zap.Error(err))
+		}
+	}()
 
 	dbPool := database.ConnectDB(cfg.DBUri)
 	defer dbPool.Close()
@@ -71,6 +86,7 @@ func main() {
 	// r := gin.Default()
 	r := gin.New()
 	r.Use(gin.Recovery())
+	r.Use(otelgin.Middleware("ecommerce-api"))
 	r.Use(middleware.RequestID())
 	r.Use(middleware.Logger())
 	r.Use(middleware.RateLimiterTokenBucket(redisClient, 1, 10))

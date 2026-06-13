@@ -48,6 +48,7 @@ func RunMigrations(dsn string) {
 	if err != nil {
 		// log.Fatalf("❌ Gagal membuat instance migrasi: %v\n", err)
 		logger.Log.Error(" Gagal membuat instance migrasi:", zap.Error(err))
+		panic("Infrastruktur DB gagal, hentikan aplikasi!")
 	}
 
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
