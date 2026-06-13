@@ -1,4 +1,4 @@
-package usecase_test
+package mocks
 
 // import (
 // 	"context"
