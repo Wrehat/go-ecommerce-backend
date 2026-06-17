@@ -21,6 +21,12 @@ func LoadConfig() *AppConfig {
 	// Todo: baca env variable dari sistem opearsi
 	viper.AutomaticEnv()
 
+	viper.SetDefault("APP_ENV", "development")
+	viper.SetDefault("PORT", "8080")
+	viper.SetDefault("DB_URI", "")
+	viper.SetDefault("REDIS_URL", "")
+	viper.SetDefault("JWT_SECRET", "")
+
 	// Todo: baca dari file .env
 	if err := viper.ReadInConfig(); err != nil {
 		log.Printf("⚠️ File .env tidak ditemukan, menggunakan nilai dari sistem OS: %v\n", err)

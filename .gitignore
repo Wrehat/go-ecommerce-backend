@@ -1,3 +1,25 @@
+# Environment & Secrets
 .env
+.env.*
+!.env.example
+
+# Dependencies
 /vendor/
+
+# Build artifacts
 *.exe
+*.out
+ecommerce-api
+
+# Local blueprint / learning notes (tidak perlu masuk repo)
+*.docx
+*.doc
+*.pdf
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/

@@ -10,19 +10,18 @@ import (
 	"ecommerce/internal/repository"
 	"ecommerce/internal/usecase"
 	"ecommerce/pkg/logger"
+	"ecommerce/pkg/telemetry"
 	"net/http"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"go.uber.org/zap"
-
-	"ecommerce/pkg/telemetry"
-
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+	"go.uber.org/zap"
 )
 
 // @title Toko Arsitek API
@@ -48,10 +47,11 @@ func main() {
 		logger.Log.Error("Gagal inisialisasi OTel Tracer", zap.Error(err))
 		panic("Gagal menyalakan OpenTelemetry")
 	}
+
 	defer func() {
-		if err := tp.Shutdown(context.Background()); err != nil {
-			logger.Log.Error("Gagal mematikan Tracer", zap.Error(err))
-		}
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		tp.Shutdown(ctx)
 	}()
 
 	dbPool := database.ConnectDB(cfg.DBUri)
@@ -83,14 +83,15 @@ func main() {
 	// =============================================================
 	// 3. ROUTER & API MAPPING (Pemetaan Rute HTTP)
 	// =============================================================
-	// r := gin.Default()
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(otelgin.Middleware("ecommerce-api"))
+	pprof.Register(r)
 	r.Use(middleware.RequestID())
 	r.Use(middleware.Logger())
 	r.Use(middleware.RateLimiterTokenBucket(redisClient, 1, 10))
 	authMiddleware := middleware.RequireAuth(cfg.JWTSecret)
+
 	setupRoutes := func() {
 		v1 := r.Group("/api/v1")
 
@@ -131,7 +132,6 @@ func main() {
 		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	}
 
-	// Jalankan pemetaan rute
 	setupRoutes()
 
 	// =============================================================
@@ -173,17 +173,14 @@ func handleGracefulShutdown(srv *http.Server) {
 	// Menunggu tombol Ctrl+C atau perintah kill di terminal
 	<-ctx.Done()
 
-	// fmt.Println("\n⏳ Sinyal mati diterima. Mematikan server secara anggun (Graceful Shutdown)...")
 	logger.Log.Info("Sinyal mati diterima. Mematikan server secara anggun (Graceful Shutdown)...")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
-		// fmt.Printf("❌ Error saat mematikan server: %v\n", err)
 		logger.Log.Error("Error saat mematikan server", zap.Error(err))
 	}
 
-	// fmt.Println("🛑 Server berhasil dimatikan dengan aman sepenuhnya.")
 	logger.Log.Info("Server berhasil dimatikan dengan aman sepenuhnya.")
 }
