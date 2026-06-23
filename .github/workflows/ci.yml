@@ -1,0 +1,30 @@
+name: Go Backend CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Mengambil kode dari gudang
+        uses: actions/checkout@v4
+
+      - name: Setup Go 1.25
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.x"
+          cache: true
+
+      - name: Download Dependencies
+        run: go mod download
+
+      - name: Menjalankan semua pengujian (Race Detector)
+        run: go test -v -race ./...
+
+      - name: Build Test (Kompilasi)
+        run: go build -v ./cmd/api/main.go
