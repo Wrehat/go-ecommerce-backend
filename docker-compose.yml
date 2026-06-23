@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password 
+      POSTGRES_DB: toko_db 
+    ports:
+      - "5432:5432" 
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d toko_db"] 
+      interval: 3s
+      timeout: 3s
+      retries: 5
+
+  cache_server:
+    image: redis:7-alpine 
+    ports:
+      - "6379:6379" 
+  api:
+    build: .
+    image: tokokana-api:v1
+    ports:
+      - "8080:8080" 
+    env_file:
+      - .env 
+    depends_on:
+      db:
+        condition: service_healthy 
+      cache_server:
+        condition: service_started
+
+volumes:
+  pgdata:

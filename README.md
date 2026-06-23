@@ -59,8 +59,8 @@ Mengikuti prinsip Clean Architecture:
 
 ## 🚀 Fase Selanjutnya (Deployment & DevOps)
 
-- [x] Dockerisasi Aplikasi (Dockerfile & Multi-stage Build) *(Day 29-30)*
-- [ ] Docker Compose (Orkestrasi Multi-Container)
+- [x] Dockerisasi Aplikasi (Dockerfile & Multi-stage Build) _(Day 29-30)_
+- [x] Docker Compose (Orkestrasi Multi-Container)
 - [ ] CI/CD Pipeline (GitHub Actions untuk Automated Testing)
 - [ ] Cloud Deployment (Deploy API ke VPS / PaaS)
 
@@ -69,52 +69,51 @@ Mengikuti prinsip Clean Architecture:
 ### 1. Menyiapkan Proyek
 
 1. Clone repository.
-2. Buat file `.env` dari contoh di bawah (isi sesuai konfigurasi lokal kamu):
+2. Buat file `.env` dari contoh di bawah. Perhatikan bahwa konfigurasi host database dan cache telah diatur agar sesuai dengan arsitektur jaringan internal Docker Compose:
 
 ```env
-DB_URI=postgresql://user:password@host.docker.internal:5433/toko_db?sslmode=disable
+DB_URI=postgresql://user:password@db:5432/toko_db?sslmode=disable
 PORT=8080
-REDIS_URL=host.docker.internal:6379
+REDIS_URL=cache_server:6379
 JWT_SECRET=your_secret_key
 ```
 
-3. Pastikan **Docker Desktop** dalam keadaan menyala.
-4. Pastikan container **PostgreSQL** dan **Redis** sudah berjalan.
+### 2. Menjalankan via Docker Compose (Production-Ready)
 
-### 2. Menjalankan Server API (Development Mode)
+Aplikasi ini beserta infrastrukturnya (PostgreSQL & Redis) sudah diorkestrasi menggunakan Docker Compose. Sistem ini otomatis menciptakan jaringan tertutup (Private Network) dan volume persisten untuk keamanan data.
 
-Proyek ini menggunakan `Makefile` untuk mempermudah eksekusi infrastruktur dan aplikasi secara bersamaan.
+**Menyalakan Seluruh Sistem (API, DB, Cache):**
 
 ```bash
-make run
+docker compose up -d --build
 ```
 
-### 3. Menjalankan via Docker Container
+**Cek Logs API Real-time:**
 
-Aplikasi ini sudah di-Dockerisasi menggunakan **Multi-Stage Build** untuk menghasilkan image yang ringan berbasis Alpine Linux.
-
-**Build image:**
 ```bash
-docker build -t tokokana-api:v1 .
+docker compose logs -f api
 ```
 
-**Jalankan container:**
-```bash
-docker run -d --name tokokana-server -p 8080:8080 --env-file .env tokokana-api:v1
-```
+**Melihat Status Kontainer:**
 
-> **Catatan:** Saat menggunakan Docker, `REDIS_URL` dan `DB_URI` harus menggunakan `host.docker.internal` (bukan `localhost`) agar container API bisa menjangkau service yang berjalan di Mac host.
-
-**Cek logs:**
 ```bash
-docker logs tokokana-server
+docker compose ps
 ```
 
 **Akses API:**
+
 - Swagger Docs: `http://localhost:8080/swagger/index.html`
 - Health check: `http://localhost:8080/ping`
 
-### 4. Analisis Performa (Profiling dengan pprof)
+**Mematikan Sistem:**
+
+```bash
+docker compose down
+```
+
+_(Catatan: Data PostgreSQL aman dan tidak akan hilang karena menggunakan Docker Volumes `pgdata`)._
+
+### 3. Analisis Performa (Profiling dengan pprof)
 
 Aplikasi ini sudah dilengkapi dengan sensor `pprof` untuk membedah performa CPU dan memori secara _real-time_.
 
@@ -122,11 +121,13 @@ Aplikasi ini sudah dilengkapi dengan sensor `pprof` untuk membedah performa CPU 
 2. Buka terminal baru dan jalankan salah satu perintah berikut:
 
 **Melihat Profil CPU (Selama 10 detik):**
+
 ```bash
 go tool pprof -http=:8081 "http://localhost:8080/debug/pprof/profile?seconds=10"
 ```
 
 **Melihat Profil Memori (Heap/RAM):**
+
 ```bash
 go tool pprof -http=:8081 "http://localhost:8080/debug/pprof/heap"
 ```
