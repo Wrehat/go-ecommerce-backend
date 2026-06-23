@@ -11,6 +11,8 @@ import (
 	"ecommerce/internal/usecase"
 	"ecommerce/pkg/logger"
 	"ecommerce/pkg/telemetry"
+	pb "ecommerce/proto"
+	"net"
 	"net/http"
 	"os/signal"
 	"syscall"
@@ -22,6 +24,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 )
 
 // @title Toko Arsitek API
@@ -71,6 +74,8 @@ func main() {
 	productRepo := repository.NewProductRepository(dbPool)
 	productUsecase := usecase.NewProductUsecase(productRepo, redisClient)
 	productHandler := handler.NewProductHandler(productUsecase)
+
+	productGrpcHandler := handler.NewProductGrpcHandler(productUsecase)
 
 	// Order Module
 	orderRepo := repository.NewOrderRepository(dbPool)
@@ -139,6 +144,23 @@ func main() {
 	// =============================================================
 	// 4. SERVER RUNNER & LIFECYCLE MANAGEMENT (Menjalankan Mesin)
 	// =============================================================
+
+	grpcServer := grpc.NewServer()
+	pb.RegisterProductServiceServer(grpcServer, productGrpcHandler)
+
+	grpcListener, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		logger.Log.Error("Gagal membuka port gRPC", zap.Error(err))
+		panic(err)
+	}
+
+	go func() {
+		logger.Log.Info("🚀 gRPC Server berjalan di jalur biner", zap.String("port", "50051"))
+		if err := grpcServer.Serve(grpcListener); err != nil {
+			logger.Log.Error("Error saat menjalankan gRPC server", zap.Error(err))
+		}
+	}()
+
 	srv := &http.Server{
 		Addr:         ":" + cfg.AppPort,
 		Handler:      r,
@@ -160,7 +182,7 @@ func main() {
 	}()
 
 	// Dengarkan sinyal OS untuk mematikan server secara aman
-	handleGracefulShutdown(srv)
+	handleGracefulShutdown(srv, grpcServer)
 }
 
 // =============================================================
@@ -168,21 +190,26 @@ func main() {
 // =============================================================
 
 // handleGracefulShutdown mengisolasi logika mekanik shutdown agar fungsi main() tetap bersih
-func handleGracefulShutdown(srv *http.Server) {
+func handleGracefulShutdown(srv *http.Server, grpcServer *grpc.Server) {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
 	// Menunggu tombol Ctrl+C atau perintah kill di terminal
 	<-ctx.Done()
 
-	logger.Log.Info("Sinyal mati diterima. Mematikan server secara anggun (Graceful Shutdown)...")
+	logger.Log.Info("Sinyal mati diterima. Mematikan seluruh mesin...")
 
+	// Matikan gRPC Server
+	grpcServer.GracefulStop()
+	logger.Log.Info("✅ gRPC Server dimatikan dengan aman.")
+
+	// Matikan HTTP Server
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
-		logger.Log.Error("Error saat mematikan server", zap.Error(err))
+		logger.Log.Error("Error saat mematikan HTTP server", zap.Error(err))
 	}
 
-	logger.Log.Info("Server berhasil dimatikan dengan aman sepenuhnya.")
+	logger.Log.Info("✅ HTTP Server dimatikan dengan aman.")
 }

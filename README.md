@@ -88,13 +88,10 @@ flowchart TB
 - [x] Structured Logging dengan Uber Zap (Day 61)
 - [x] OpenTelemetry (OTel) Minimal Instrumentation (Day 61)
 - [x] Profiling Performa (pprof) (Day 62)
-
-## 🚀 Fase Selanjutnya (Deployment & DevOps)
-
 - [x] Dockerisasi Aplikasi (Dockerfile & Multi-stage Build) _(Day 29-30)_
 - [x] Docker Compose (Orkestrasi Multi-Container)
 - [x] CI/CD Pipeline (GitHub Actions untuk Automated Testing)
-- [ ] Cloud Deployment (Deploy API ke VPS / PaaS)
+- [x] Implement gRPC endpoint for product service
 
 ## ⚙️ Cara Menjalankan
 
@@ -165,3 +162,22 @@ go tool pprof -http=:8081 "http://localhost:8080/debug/pprof/heap"
 ```
 
 _(Catatan: Anda membutuhkan Graphviz yang terinstal di OS Anda untuk melihat visualisasi Flame Graph di browser)._
+
+## 📡 gRPC Service
+
+Layanan ini juga mendukung komunikasi gRPC untuk performa tinggi antar-layanan (Microservices).
+
+- **Port:** `50051`
+- **Service Definition:** `proto/product.proto`
+
+**Cara Testing gRPC di Postman:**
+
+1. Gunakan opsi "New" -> "gRPC Request".
+2. Masukkan URL: `grpc://localhost:50051`
+3. Pada tab "Service definition", import file `proto/product.proto`.
+4. Pilih metode `ProductService / GetProductByID` dan masukkan JSON payload:
+   ```json
+   {
+     "id": 1
+   }
+   ```
