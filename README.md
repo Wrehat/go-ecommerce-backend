@@ -22,6 +22,42 @@ Proyek ini adalah implementasi Backend menggunakan bahasa Go dengan standar **Cl
 
 Mengikuti prinsip Clean Architecture:
 
+## 🛠️ Arsitektur
+
+Mengikuti prinsip Clean Architecture:
+
+```mermaid
+flowchart TB
+    Client([📱 Client / Postman])
+
+    subgraph "Docker Compose (Private Network)"
+        API["🚀 Go E-Commerce API (Gin)"]
+
+        subgraph "Data Layer"
+            DB[("🐘 PostgreSQL (pgx/v5)")]
+            Cache[("⚡ Redis Cache (go-redis/v9)")]
+        end
+    end
+
+    subgraph "Observability Layer"
+        Logger["📝 Uber Zap (Logs)"]
+        Tracer["📡 OpenTelemetry (Traces)"]
+    end
+
+    %% Hubungan antar komponen
+    Client -- "HTTP REST" --> API
+    API -- "1. Cache-Aside Pattern" --> Cache
+    API -- "2. R/W Data (ACID)" --> DB
+
+    %% Hubungan observabilitas (garis putus-putus)
+    API -. "Record Logs" .-> Logger
+    API -. "Record Latency" .-> Tracer
+
+    %% Warna styling tambahan
+    classDef api fill:#00add8,stroke:#333,stroke-width:2px,color:#fff;
+    class API api;
+```
+
 - `internal/domain`: Kontrak interface dan entitas pusat.
 - `internal/repository`: Implementasi SQL murni & akses database.
 - `internal/usecase`: Logika bisnis utama & Caching Strategy.
@@ -61,7 +97,7 @@ Mengikuti prinsip Clean Architecture:
 
 - [x] Dockerisasi Aplikasi (Dockerfile & Multi-stage Build) _(Day 29-30)_
 - [x] Docker Compose (Orkestrasi Multi-Container)
-- [ ] CI/CD Pipeline (GitHub Actions untuk Automated Testing)
+- [x] CI/CD Pipeline (GitHub Actions untuk Automated Testing)
 - [ ] Cloud Deployment (Deploy API ke VPS / PaaS)
 
 ## ⚙️ Cara Menjalankan
