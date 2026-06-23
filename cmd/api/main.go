@@ -51,7 +51,9 @@ func main() {
 	defer func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		tp.Shutdown(ctx)
+		if err := tp.Shutdown(ctx); err != nil {
+			logger.Log.Error("Error saat mematikan trace", zap.Error(err))
+		}
 	}()
 
 	dbPool := database.ConnectDB(cfg.DBUri)

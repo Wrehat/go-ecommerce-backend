@@ -48,6 +48,7 @@ func Logger() gin.HandlerFunc {
 	}
 }
 
+// #nosec G101 -- Mengabaikan false positive peringatan hardcoded token pada script Lua
 const tokenBucketScript = `
 local tokens_key = KEYS[1]
 local timestamp_key = KEYS[2]

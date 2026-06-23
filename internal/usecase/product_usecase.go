@@ -3,11 +3,13 @@ package usecase
 import (
 	"context"
 	"ecommerce/internal/domain"
+	"ecommerce/pkg/logger"
 	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 )
 
 // Definisikan struktur untuk ProductUseCase
@@ -47,7 +49,9 @@ func (u *productUsecase) GetAllProducts(ctx context.Context) ([]domain.Product, 
 	if err == nil {
 		fmt.Println("🚀 CACHE HIT: Ambil dari Redis!")
 		var product []domain.Product
-		json.Unmarshal([]byte(cachedData), &product)
+		if err := json.Unmarshal([]byte(cachedData), &product); err != nil {
+			logger.Log.Error("Error Unmarshal data cache", zap.Error(err))
+		}
 		return product, nil
 	}
 
@@ -60,7 +64,9 @@ func (u *productUsecase) GetAllProducts(ctx context.Context) ([]domain.Product, 
 
 	// Todo : Simpan data ke redis
 	productsJSON, _ := json.Marshal(products)
-	u.redisClient.Set(ctx, cacheKey, productsJSON, 5*time.Minute).Err()
+	if err := u.redisClient.Set(ctx, cacheKey, productsJSON, 5*time.Minute).Err(); err != nil {
+		logger.Log.Error("Error Saat Simpan Ke Redis", zap.Error(err))
+	}
 
 	return products, nil
 }
