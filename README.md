@@ -22,10 +22,6 @@ Proyek ini adalah implementasi Backend menggunakan bahasa Go dengan standar **Cl
 
 Mengikuti prinsip Clean Architecture:
 
-## 🛠️ Arsitektur
-
-Mengikuti prinsip Clean Architecture:
-
 ```mermaid
 flowchart TB
     Client([📱 Client / Postman])
