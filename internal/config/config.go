@@ -38,14 +38,5 @@ func LoadConfig() *AppConfig {
 		log.Fatalf("❌ Gagal memparsing konfigurasi: %v\n", err)
 	}
 
-	// Todo: beri nilai default jika .env tidak ada
-	if config.AppPort == "" {
-		config.AppPort = "8080"
-	}
-
-	if config.AppEnv == "" {
-		config.AppEnv = "development"
-	}
-
 	return &config
 }

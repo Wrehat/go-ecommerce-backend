@@ -3,27 +3,28 @@ package database
 import (
 	"context"
 	"ecommerce/pkg/logger"
+	"fmt"
+	"time"
 
 	"github.com/redis/go-redis/v9"
-	"go.uber.org/zap"
 )
 
-func ConnRedis(rdsURL string) *redis.Client {
+func ConnRedis(rdsURL string) (*redis.Client, error) {
 	client := redis.NewClient(&redis.Options{
 		Addr:     rdsURL,
 		Password: "",
 		DB:       0,
 	})
 
-	err := client.Ping(context.Background()).Err()
-	if err != nil {
-		// log.Fatalf("❌ Gagal terhubung ke Redis: %v", err)
-		logger.Log.Error("Gagal terhubung ke Redis", zap.Error(err))
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := client.Ping(ctx).Err(); err != nil {
+		return nil, fmt.Errorf("gagal ping ke redis: %w", err)
 	}
 
-	// fmt.Println("⚡ Berhasil terhubung ke Redis (In-Memory Cache)!")
 	logger.Log.Info("Berhasil terhubung ke Redis (In-Memory Cache)!")
 
-	return client
+	return client, nil
 
 }

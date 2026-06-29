@@ -59,11 +59,19 @@ func main() {
 		}
 	}()
 
-	dbPool := database.ConnectDB(cfg.DBUri)
+	dbPool, err := database.ConnectDB(cfg.DBUri)
+	if err != nil {
+		logger.Log.Fatal("gagal koneksi database", zap.Error(err))
+	}
 	defer dbPool.Close()
 
-	database.RunMigrations(cfg.DBUri)
-	redisClient := database.ConnRedis(cfg.RedisURL)
+	if err := database.RunMigrations(cfg.DBUri); err != nil {
+		logger.Log.Fatal("migrasi gagal", zap.Error(err))
+	}
+	redisClient, err := database.ConnRedis(cfg.RedisURL)
+	if err != nil {
+		logger.Log.Fatal("gagal koneksi redis", zap.Error(err))
+	}
 	defer redisClient.Close()
 
 	// =============================================================
